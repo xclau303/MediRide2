@@ -40,7 +40,7 @@ import { SupportScreen } from "@/components/support-screen"
 import { PostRideScreen } from "@/components/post-ride-screen"
 import { MapLocationScreen } from "@/components/map-location-screen"
 import { ConfirmLocationScreen } from "@/components/confirm-location-screen"
-import type { RideSimulation } from "@/types/driver"
+import type { RideSimulation, Driver } from "@/types/driver"
 
 export type Screen =
   | "splash"
@@ -87,11 +87,40 @@ interface ScreenState {
   data?: any
 }
 
+interface ProfileData {
+  firstName: string;
+  lastName: string;
+  birthMonth: string;
+  birthDay: string;
+  birthYear: string;
+  address: string;
+  phone: string;
+  language: string;
+  insuranceProvider: string;
+  policyNumber: string;
+  expiryDate: string;
+  ridesLeft: number;
+  completedRides: number;
+}
+
+interface RideData {
+  id: string;
+  date: string;
+  time: string;
+  pickup: string;
+  dropoff: string;
+  status: string;
+  vehicleType: string;
+  price: string;
+  isScheduled: boolean;
+  createdAt: number;
+}
+
 export default function MediRideApp() {
   const [currentScreen, setCurrentScreen] = useState<ScreenState>({ name: "splash" })
   const [screenHistory, setScreenHistory] = useState<ScreenState[]>([])
-  const [signupData, setSignupData] = useState({})
-  const [profileData, setProfileData] = useState({
+  const [signupData, setSignupData] = useState<Record<string, any>>({})
+  const [profileData, setProfileData] = useState<ProfileData>({
     firstName: "John",
     lastName: "Doe",
     birthMonth: "01",
@@ -107,7 +136,7 @@ export default function MediRideApp() {
     completedRides: 12,
   })
 
-  const [upcomingRides, setUpcomingRides] = useState<any[]>([])
+  const [upcomingRides, setUpcomingRides] = useState<RideData[]>([])
   const [selectedRideData, setSelectedRideData] = useState<any>(null)
 
   // Driver simulation state
@@ -175,18 +204,18 @@ export default function MediRideApp() {
     })
   }
 
-  const updateSignupData = (data: any) => {
+  const updateSignupData = (data: Record<string, any>) => {
     setSignupData((prev) => ({ ...prev, ...data }))
   }
 
-  const updateProfileData = (data: any) => {
+  const updateProfileData = (data: Partial<ProfileData>) => {
     setProfileData((prev) => ({ ...prev, ...data }))
   }
 
   const addUpcomingRide = (rideData: any) => {
     setSelectedRideData(rideData)
 
-    const newRide = {
+    const newRide: RideData = {
       id: Date.now().toString(),
       date: rideData.isScheduled
         ? rideData.scheduledDate
@@ -242,49 +271,52 @@ export default function MediRideApp() {
   }
 
   const renderScreen = () => {
+    const screenProps = {
+      onNavigate: navigateToScreen,
+      goBack: goBack,
+    }
+
     switch (currentScreen.name) {
       case "splash":
         return <SplashScreen />
       case "welcome":
-        return <WelcomeScreen onNavigate={navigateToScreen} />
+        return <WelcomeScreen {...screenProps} />
       case "login":
-        return <LoginScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <LoginScreen {...screenProps} />
       case "signup":
-        return <SignUpScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <SignUpScreen {...screenProps} />
       case "personal-info":
-        return <PersonalInfoScreen onNavigate={navigateToScreen} onUpdateData={updateSignupData} goBack={goBack} />
+        return <PersonalInfoScreen {...screenProps} onUpdateData={updateSignupData} />
       case "location":
-        return <LocationScreen onNavigate={navigateToScreen} onUpdateData={updateSignupData} goBack={goBack} />
+        return <LocationScreen {...screenProps} onUpdateData={updateSignupData} />
       case "verification":
-        return <VerificationScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <VerificationScreen {...screenProps} />
       case "insurance":
-        return <InsuranceScreen onNavigate={navigateToScreen} onUpdateData={updateSignupData} goBack={goBack} />
+        return <InsuranceScreen {...screenProps} onUpdateData={updateSignupData} />
       case "guardian":
-        return <GuardianScreen onNavigate={navigateToScreen} onUpdateData={updateSignupData} goBack={goBack} />
+        return <GuardianScreen {...screenProps} onUpdateData={updateSignupData} />
       case "guardian-info":
-        return <GuardianInfoScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <GuardianInfoScreen {...screenProps} />
       case "set-location":
         return (
           <SetLocationScreen
-            onNavigate={navigateToScreen}
+            {...screenProps}
             initialPickup={currentScreen.data?.initialPickup}
             initialDropoff={currentScreen.data?.selectedAddress || currentScreen.data?.initialDropoff}
-            goBack={goBack}
           />
         )
       case "schedule-ride":
         return (
           <ScheduleRideScreen
-            onNavigate={navigateToScreen}
+            {...screenProps}
             pickupLocation={currentScreen.data?.pickupLocation}
             dropoffLocation={currentScreen.data?.dropoffLocation}
-            goBack={goBack}
           />
         )
       case "choose-ride":
         return (
           <ChooseRideScreen
-            onNavigate={navigateToScreen}
+            {...screenProps}
             pickupLocation={currentScreen.data?.pickupLocation}
             dropoffLocation={currentScreen.data?.dropoffLocation}
             pickupLatLng={currentScreen.data?.pickupLatLng}
@@ -293,10 +325,8 @@ export default function MediRideApp() {
             scheduledTime={currentScreen.data?.scheduledTime}
             isScheduled={currentScreen.data?.isScheduled}
             onBookRide={addUpcomingRide}
-            goBack={goBack}
             routeInfo={currentScreen.data?.routeInfo}
             routeCoordinates={currentScreen.data?.routeCoordinates}
-            // Pass driver simulation functions
             currentRideSimulation={currentRideSimulation}
             setCurrentRideSimulation={setCurrentRideSimulation}
           />
@@ -304,8 +334,7 @@ export default function MediRideApp() {
       case "book-later":
         return (
           <BookLaterScreen
-            onNavigate={navigateToScreen}
-            goBack={goBack}
+            {...screenProps}
             pickupAddress={currentScreen.data?.pickupLocation}
             destinationAddress={currentScreen.data?.dropoffLocation}
             pickupLatLng={currentScreen.data?.pickupLatLng}
@@ -313,19 +342,18 @@ export default function MediRideApp() {
           />
         )
       case "pickup-confirmation":
-        return <PickupConfirmationScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <PickupConfirmationScreen {...screenProps} />
       case "change-pickup":
         return (
           <ChangePickupScreen
-            onNavigate={navigateToScreen}
+            {...screenProps}
             initialPickup={currentScreen.data?.initialPickup}
-            goBack={goBack}
           />
         )
       case "waiting-for-ride":
         return (
           <WaitingForRideScreen
-            onNavigate={navigateToScreen}
+            {...screenProps}
             pickupLocation={currentScreen.data?.pickupLocation}
             dropoffLocation={currentScreen.data?.dropoffLocation}
             pickupLatLng={currentScreen.data?.pickupLatLng}
@@ -337,7 +365,7 @@ export default function MediRideApp() {
       case "during-ride":
         return (
           <DuringRideScreen
-            onNavigate={navigateToScreen}
+            {...screenProps}
             pickupLocation={currentScreen.data?.pickupLocation}
             dropoffLocation={currentScreen.data?.dropoffLocation}
             pickupLatLng={currentScreen.data?.pickupLatLng}
@@ -379,9 +407,9 @@ export default function MediRideApp() {
           />
         )
       case "ride-activity":
-        return <RideActivityScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <RideActivityScreen {...screenProps} />
       case "profile":
-        return <ProfileScreen onNavigate={navigateToScreen} profileData={profileData} goBack={goBack} />
+        return <ProfileScreen {...screenProps} profileData={profileData} />
       case "dashboard":
         return (
           <DashboardScreen
@@ -392,56 +420,53 @@ export default function MediRideApp() {
           />
         )
       case "reset-password":
-        return <ResetPasswordScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <ResetPasswordScreen {...screenProps} />
       case "reset-confirm":
-        return <ResetConfirmScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <ResetConfirmScreen {...screenProps} />
       case "reserve-car":
-        return <ReserveCarScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <ReserveCarScreen {...screenProps} />
       case "save-place":
         return (
           <SavePlaceScreen
-            onNavigate={navigateToScreen}
+            {...screenProps}
             initialAddress={currentScreen.data?.initialAddress}
-            goBack={goBack}
           />
         )
       case "add-place":
-        return <AddPlaceScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <AddPlaceScreen {...screenProps} />
       case "reservation-details":
-        return <ReservationDetailsScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <ReservationDetailsScreen {...screenProps} />
       case "reservation-confirmed":
         return <ReservationConfirmedScreen onNavigate={navigateToScreen} reservationData={currentScreen.data} />
       case "saved-places":
-        return <SavedPlacesScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <SavedPlacesScreen {...screenProps} />
       case "ride-denied-details":
         return (
           <RideDeniedDetailsScreen
-            onNavigate={navigateToScreen}
+            {...screenProps}
             rideDetails={currentScreen.data?.rideDetails}
-            goBack={goBack}
           />
         )
       case "edit-profile":
         return (
           <EditProfileScreen
-            onNavigate={navigateToScreen}
+            {...screenProps}
             profileData={profileData}
             onUpdateProfileData={updateProfileData}
-            goBack={goBack}
           />
         )
       case "faq":
-        return <FAQScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <FAQScreen {...screenProps} />
       case "chat-support":
-        return <ChatSupportScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <ChatSupportScreen {...screenProps} />
       case "driver-chat":
-        return <DriverChatScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <DriverChatScreen {...screenProps} />
       case "support":
-        return <SupportScreen onNavigate={navigateToScreen} goBack={goBack} />
+        return <SupportScreen {...screenProps} />
       case "confirm-location":
         return (
           <ConfirmLocationScreen
-            onNavigate={navigateToScreen}
+            {...screenProps}
             pickupLocation={currentScreen.data?.pickupLocation}
             dropoffLocation={currentScreen.data?.dropoffLocation}
             pickupLatLng={currentScreen.data?.pickupLatLng}
@@ -449,17 +474,15 @@ export default function MediRideApp() {
             scheduledDate={currentScreen.data?.scheduledDate}
             scheduledTime={currentScreen.data?.scheduledTime}
             isScheduled={currentScreen.data?.isScheduled}
-            goBack={goBack}
           />
         )
       case "map-location":
         return (
           <MapLocationScreen
-            onNavigate={navigateToScreen}
+            {...screenProps}
             locationType={currentScreen.data?.locationType}
             currentPickup={currentScreen.data?.currentPickup}
             currentDropoff={currentScreen.data?.currentDropoff}
-            goBack={goBack}
           />
         )
       default:

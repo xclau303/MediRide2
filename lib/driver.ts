@@ -43,3 +43,29 @@ export interface DriverName {
   first: string
   last: string
 }
+
+// Additional helpful types for the app
+export interface RouteInfo {
+  distance: number // meters
+  duration: number // seconds
+  polyline?: string
+}
+
+export interface LocationCoords {
+  lat: number
+  lng: number
+}
+
+export interface RideRequest {
+  id: string
+  pickupLocation: string
+  dropoffLocation: string
+  pickupLatLng: LocationCoords
+  dropoffLatLng: LocationCoords
+  scheduledDate?: string
+  scheduledTime?: string
+  isScheduled: boolean
+  vehicleType?: string
+  isAccessible?: boolean
+  createdAt: number
+}
