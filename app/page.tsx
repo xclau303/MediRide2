@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { ClientAnimationWrapper } from "@/components/client-animation-wrapper"
 import { SplashScreen } from "@/components/splash-screen"
 import { WelcomeScreen } from "@/components/welcome-screen"
 import { LoginScreen } from "@/components/login-screen"
@@ -470,18 +470,9 @@ export default function MediRideApp() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-sm mx-auto">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentScreen.name}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="w-full"
-          >
-            {renderScreen()}
-          </motion.div>
-        </AnimatePresence>
+        <ClientAnimationWrapper key={currentScreen.name}>
+          {renderScreen()}
+        </ClientAnimationWrapper>
       </div>
     </div>
   )
