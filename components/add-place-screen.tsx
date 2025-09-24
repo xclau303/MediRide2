@@ -24,11 +24,15 @@ export function AddPlaceScreen({ onNavigate, goBack }: AddPlaceScreenProps) {
   const handleSavePlace = () => {
     if (placeName && address) {
       const newPlace = { name: placeName, address, icon: selectedIcon }
-      const storedPlaces = JSON.parse(localStorage.getItem("mediride_saved_places") || "[]")
-      localStorage.setItem("mediride_saved_places", JSON.stringify([...storedPlaces, newPlace]))
+      if (typeof window !== 'undefined') {
+        const storedPlaces = JSON.parse(localStorage.getItem("mediride_saved_places") || "[]")
+        localStorage.setItem("mediride_saved_places", JSON.stringify([...storedPlaces, newPlace]))
+      }
       onNavigate("saved-places")
     } else {
-      alert("Please enter both a place name and an address.")
+      if (typeof window !== 'undefined') {
+        alert("Please enter both a place name and an address.")
+      }
     }
   }
 
